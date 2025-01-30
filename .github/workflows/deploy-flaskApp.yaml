@@ -18,6 +18,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Install Minikube
+        run: |
+          if ! command -v minikube &> /dev/null; then
+            echo "Minikube not found, installing..."
+            curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+            sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          else
+            echo "Minikube already installed."
+          fi
+
       - name: Start Minikube (if not running)
         run: |
           minikube status || minikube start --driver=docker
