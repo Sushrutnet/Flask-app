@@ -59,6 +59,12 @@ jobs:
         run: |
           kubectl config use-context minikube
 
+      # Set kubectl alias to use minikube's kubectl
+      - name: Set kubectl alias
+        run: |
+          echo "alias kubectl='minikube kubectl --'" >> ~/.bashrc
+          source ~/.bashrc
+
       # Apply Kubernetes Deployment for Flask App
       - name: Deploy Flask app to Kubernetes
         run: |
@@ -73,3 +79,23 @@ jobs:
       - name: Verify the Flask app is running
         run: |
           kubectl get pods
+
+      # Get Minikube IP
+      - name: Get Minikube IP
+        run: |
+          minikube_ip=$(minikube ip)
+          echo "Minikube IP: $minikube_ip"
+          echo "Minikube IP: $minikube_ip" >> $GITHUB_ENV
+
+      # Get Minikube IP and port where the Flask app is exposed
+      - name: Get Flask app URL
+        run: |
+          minikube_ip=${{ env.minikube_ip }}
+          minikube_service_port=$(kubectl get svc flask-app-service -o=jsonpath='{.spec.ports[0].nodePort}')
+          echo "Flask app is available at http://$minikube_ip:$minikube_service_port"
+          echo "Flask app is available at http://$minikube_ip:$minikube_service_port" >> $GITHUB_ENV
+          
+      # Show Flask app URL
+      - name: Show Flask app URL
+        run: |
+          echo "Flask app is available at http://${{ env.minikube_ip }}:${{ env.minikube_service_port }}"
