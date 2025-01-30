@@ -35,7 +35,7 @@ jobs:
       - name: Configure Kubeconfig for Minikube
         run: |
           mkdir -p ~/.kube
-          minikube kubeconfig > ~/.kube/config
+          minikube config view --format='{{.KubeConfigPath}}' | xargs cat > ~/.kube/config
 
       - name: Deploy App to Kubernetes
         run: |
