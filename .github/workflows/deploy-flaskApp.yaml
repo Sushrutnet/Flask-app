@@ -10,11 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Install dependencies (Docker, Minikube, kubectl)
-      - name: Set up dependencies
+      # Install dependencies (Minikube, Docker, kubectl)
+      - name: Install Minikube, Docker, and kubectl
         run: |
           # Install Minikube
           if ! command -v minikube; then
@@ -28,7 +29,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y ca-certificates curl
             sudo apt-get install -y docker.io
-            sudo systemctl enable docker
             sudo systemctl start docker
           fi
 
@@ -37,67 +37,58 @@ jobs:
             curl -LO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
             sudo mv kubectl /usr/local/bin/
             sudo chmod +x /usr/local/bin/kubectl
-          fi
 
       # Ensure Docker is running
       - name: Ensure Docker is running
         run: |
           sudo systemctl start docker
           sudo systemctl enable docker
+          sleep 15  # Wait for Docker to be ready
 
       # Start Minikube
       - name: Start Minikube
         run: |
-          minikube start --driver=docker || minikube start --driver=docker
+          for i in {1..3}; do
+            minikube start --driver=docker && break || sleep 15;
+          done
+          minikube status
 
-      # Update kubectl context to Minikube
+      # Update kubectl context
       - name: Update kubectl context
         run: |
           minikube update-context
-
-      # Set kubectl context explicitly
-      - name: Ensure kubectl context is properly set
-        run: |
           kubectl config use-context minikube
 
-      # Set kubectl alias to use minikube's kubectl
-      - name: Set kubectl alias
-        run: |
-          echo "alias kubectl='minikube kubectl --'" >> ~/.bashrc
-          source ~/.bashrc
-
-      # Apply Kubernetes Deployment for Flask App
+      # Deploy Flask app to Kubernetes
       - name: Deploy Flask app to Kubernetes
         run: |
           kubectl apply -f flask-deployment.yaml --validate=false
 
-      # Check deployment status
+      # Wait for the deployment to complete
       - name: Wait for deployment to complete
         run: |
-          kubectl rollout status deployment flask-app-deployment
+          kubectl rollout status deployment flask-app-deployment --timeout=5m
 
       # Verify that the Flask app is running
       - name: Verify the Flask app is running
         run: |
           kubectl get pods
 
-      # Get Minikube IP
-      - name: Get Minikube IP
+      # Expose the Flask service
+      - name: Expose Flask service in Minikube
         run: |
-          minikube_ip=$(minikube ip)
-          echo "Minikube IP: $minikube_ip"
-          echo "MINIKUBE_IP=$minikube_ip" >> $GITHUB_ENV
+          kubectl expose deployment flask-app-deployment --type=NodePort --name=flask-app-service
+          kubectl get svc flask-app-service
 
-      # Get Minikube IP and port where the Flask app is exposed
-      - name: Get Flask app URL
+      # Get Minikube IP and Flask app URL
+      - name: Get Minikube IP and Flask app URL
         run: |
           minikube_ip=$(minikube ip)
           minikube_service_port=$(kubectl get svc flask-app-service -o=jsonpath='{.spec.ports[0].nodePort}')
-    
-          if [ -z "$minikube_ip" ]; then
-             echo "Error: Minikube IP is empty!"
-             exit 1
-          fi
-
           echo "Flask app is available at http://$minikube_ip:$minikube_service_port"
           echo "FLASK_APP_URL=http://$minikube_ip:$minikube_service_port" >> $GITHUB_ENV
+
+      # Optionally, print out the Flask app URL for use later
+      - name: Print Flask app URL
+        run: |
+          echo "Flask app URL: ${{ env.FLASK_APP_URL }}"
