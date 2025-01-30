@@ -32,6 +32,17 @@ jobs:
         run: |
           minikube status || minikube start --driver=docker
 
+      - name: Install kubectl
+        run: |
+          if ! command -v kubectl &> /dev/null; then
+            echo "kubectl not found, installing..."
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          else
+            echo "kubectl already installed."
+          fi
+
       - name: Configure Kubeconfig for Minikube
         run: |
           mkdir -p ~/.kube
