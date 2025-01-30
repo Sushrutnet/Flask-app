@@ -41,7 +41,16 @@ jobs:
 
       - name: Start Minikube (if not running)
         run: |
-          minikube status || minikube start --driver=docker
+          if ! minikube status; then
+            echo "Starting Minikube..."
+            minikube start --driver=docker
+          else
+            echo "Minikube already running."
+          fi
+
+      - name: Check Docker Status
+        run: |
+          sudo systemctl status docker || (echo "Docker not running. Please start Docker service." && exit 1)
 
       - name: Ensure Minikube Context is Set
         run: |
