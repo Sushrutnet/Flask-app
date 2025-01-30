@@ -67,7 +67,15 @@ jobs:
         run: |
           kubectl apply -f flask-deployment.yaml --validate=false
 
-      - name: Verify Deployment
+      - name: Verify Deployment Existence
+        run: |
+          kubectl get deployments
+          
+      - name: Verify Pod Status
+        run: |
+          kubectl get pods
+
+      - name: Rollout Status
         run: |
           kubectl rollout status deployment flask-app || (echo "Deployment failed" && exit 1)
 
