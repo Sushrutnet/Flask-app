@@ -18,6 +18,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Install Docker
+        run: |
+          if ! command -v docker &> /dev/null; then
+            echo "Docker not found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo usermod -aG docker $USER
+          else
+            echo "Docker already installed."
+          fi
+
       - name: Install Minikube
         run: |
           if ! command -v minikube &> /dev/null; then
@@ -31,6 +42,10 @@ jobs:
       - name: Start Minikube (if not running)
         run: |
           minikube status || minikube start --driver=docker
+
+      - name: Verify Minikube is Running
+        run: |
+          minikube status
 
       - name: Install kubectl
         run: |
@@ -50,8 +65,8 @@ jobs:
 
       - name: Verify Kubernetes Cluster Connection
         run: |
+          kubectl config use-context minikube
           kubectl get nodes
-        continue-on-error: true
 
       - name: Deploy App to Kubernetes
         run: |
