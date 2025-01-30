@@ -43,6 +43,12 @@ jobs:
         run: |
           minikube status || minikube start --driver=docker
 
+      - name: Ensure Minikube Context is Set
+        run: |
+          # Wait a few seconds to ensure Minikube is up
+          sleep 10
+          minikube update-context
+
       - name: Verify Minikube is Running
         run: |
           minikube status
