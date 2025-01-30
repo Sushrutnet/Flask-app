@@ -15,8 +15,8 @@ jobs:
 
     - name: Set up Docker, Minikube, and kubectl (using minikubesetup.sh)
       run: |
-        chmod +x minikubesetup.sh
-        ./minikubesetup.sh
+        chmod +x MinikubeSetupScript.sh
+        ./MinikubeSetupScript.sh
 
   build-and-push:
     runs-on: self-hosted
