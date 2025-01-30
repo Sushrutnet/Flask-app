@@ -28,6 +28,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y ca-certificates curl
             sudo apt-get install -y docker.io
+            sudo systemctl enable docker
             sudo systemctl start docker
           fi
 
@@ -86,11 +87,11 @@ jobs:
           minikube_ip=$(minikube ip)
           echo "Minikube IP: $minikube_ip"
           echo "MINIKUBE_IP=$minikube_ip" >> $GITHUB_ENV
+
       # Get Minikube IP and port where the Flask app is exposed
-      # Get Minikube IP and Flask app URL
       - name: Get Flask app URL
         run: |
-          minikube_ip=$(minikube ip)  # Assign minikube IP properly
+          minikube_ip=$(minikube ip)
           minikube_service_port=$(kubectl get svc flask-app-service -o=jsonpath='{.spec.ports[0].nodePort}')
     
           if [ -z "$minikube_ip" ]; then
@@ -98,6 +99,5 @@ jobs:
              exit 1
           fi
 
-          # Output the Flask app URL and set it as environment variable
           echo "Flask app is available at http://$minikube_ip:$minikube_service_port"
           echo "FLASK_APP_URL=http://$minikube_ip:$minikube_service_port" >> $GITHUB_ENV
