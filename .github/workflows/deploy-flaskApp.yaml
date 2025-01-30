@@ -44,6 +44,11 @@ jobs:
             echo "Docker already installed."
           fi
 
+      - name: Create .kube Directory
+        run: |
+          sudo mkdir -p /home/runner/.kube
+          sudo chown $USER:$USER /home/runner/.kube
+
       - name: Start Minikube
         run: |
           minikube status || minikube start --driver=docker
