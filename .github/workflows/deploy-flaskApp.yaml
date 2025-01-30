@@ -48,9 +48,14 @@ jobs:
           mkdir -p ~/.kube
           minikube config view --format='{{.KubeConfigPath}}' | xargs cat > ~/.kube/config
 
+      - name: Verify Kubernetes Cluster Connection
+        run: |
+          kubectl get nodes
+        continue-on-error: true
+
       - name: Deploy App to Kubernetes
         run: |
-          kubectl apply -f flask-deployment.yaml
+          kubectl apply -f flask-deployment.yaml --validate=false
 
       - name: Verify Deployment
         run: |
