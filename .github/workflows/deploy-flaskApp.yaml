@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-
+ 
 env:
   DOCKER_IMAGE: public-dockerhub-image/flask-app:latest
   KUBECONFIG: /home/runner/.kube/config
